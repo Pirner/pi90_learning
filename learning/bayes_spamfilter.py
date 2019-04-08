@@ -92,12 +92,12 @@ class BayesSpamfilter():
             self.probability_table.append([token, 0, 1])
 
     def search_n_occurence_in_table(self, token):
+        """Search for occurence of a word and return occurence as tuple."""
         ret_val = 0
         for entry in self.probability_table:
             if entry[0] == token:
                 ret_val = (entry[1], entry[2])
         return ret_val
-
 
     def compute_email_probability(self, content):
         """Compute the probability for an email to be spam."""
@@ -110,7 +110,7 @@ class BayesSpamfilter():
             occurence = self.search_n_occurence_in_table(word)
             pr_word_spam = 1
             pr_word_ham = 1
-            
+
             if occurence[0] > 0:
                 pr_word_spam = (occurence[0] / self.n_mails) / self.pr_spam
             if occurence[1] > 0:
