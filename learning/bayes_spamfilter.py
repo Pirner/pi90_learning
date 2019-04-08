@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 import mysql.connector
+from math import log as math_log
 
 from .utils import content_as_vector
 
@@ -90,15 +91,31 @@ class BayesSpamfilter():
         else:
             self.probability_table.append([token, 0, 1])
 
-    def compute_spam_probability(self, content):
+    def search_n_occurence_in_table(self, token):
+        ret_val = 0
+        for entry in self.probability_table:
+            if entry[0] == token:
+                ret_val = (entry[1], entry[2])
+        return ret_val
+
+
+    def compute_email_probability(self, content):
         """Compute the probability for an email to be spam."""
         # probability of the word vector
-        pr_vec = 1
+        pr_vec = math_log(self.pr_spam / self.pr_ham)
 
         # iterate through each word
+        acc = 0.0
         for word in content_as_vector(content):
-            pass
+            occurence = self.search_n_occurence_in_table(word)
+            pr_word_spam = 1
+            pr_word_ham = 1
+            
+            if occurence[0] > 0:
+                pr_word_spam = (occurence[0] / self.n_mails) / self.pr_spam
+            if occurence[1] > 0:
+                pr_word_ham = (occurence[1] / self.n_mails) / self.pr_ham
+            acc += math_log(pr_word_spam / pr_word_ham)
 
-    def compute_ham_probability(self, content):
-        """Compute the probability for an email to be ham."""
-        pass
+        pr_vec += acc
+        print(pr_vec)
