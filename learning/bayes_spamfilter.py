@@ -13,6 +13,7 @@ class BayesSpamfilter():
 
     n_spam = 0
     n_ham = 0
+    n_mails = 0
     pr_spam = 0
     pr_ham = 0
 
@@ -65,6 +66,7 @@ class BayesSpamfilter():
             # compute pr_spam and pr_ham
             self.pr_spam = (n_spam) / (n_spam + n_ham)
             self.pr_ham = (n_ham) / (n_spam + n_ham)
+            self.n_mails = n_spam + n_ham
 
     def insert_token(self, token, spam):
         """Insert a token into the table."""
@@ -90,10 +92,12 @@ class BayesSpamfilter():
 
     def compute_spam_probability(self, content):
         """Compute the probability for an email to be spam."""
-        # represent the content as a vector
-        l_content = content_as_vector(content)
+        # probability of the word vector
+        pr_vec = 1
 
-        print (l_content)
+        # iterate through each word
+        for word in content_as_vector(content):
+            pass
 
     def compute_ham_probability(self, content):
         """Compute the probability for an email to be ham."""
