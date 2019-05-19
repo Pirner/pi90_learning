@@ -20,6 +20,27 @@ class BayesSpamfilter():
 
     probability_table = []
 
+    def compute_pr_spammy_word(self, token, occ_spam, occ_ham):
+        """Compute how spammy or hammy a word is."""
+        pr_spam = occ_spam / self.n_spam
+        pr_ham = occ_ham / self.n_ham
+
+        return (pr_spam, pr_ham)
+
+    def compute_probabilies_of_table(self):
+        """Compute new probabilites according to the tables stored."""
+        acc = []
+        for entry in self.probability_table:
+            probabilities = self.compute_pr_spammy_word(
+                entry[0],
+                entry[1],
+                entry[2]
+            )
+
+            new_entry = [entry[0], entry[1], entry[2], probabilities[0], probabilities[1]]
+            acc.append(new_entry)
+        self.probability_table = acc
+
     def __init__(self):
         """Init method."""
         print('Bayesian Spamfilter created.')
@@ -64,10 +85,14 @@ class BayesSpamfilter():
             for token in set(email_content):
                 self.insert_token(token, email[1])
 
-            # compute pr_spam and pr_ham
-            self.pr_spam = (n_spam) / (n_spam + n_ham)
-            self.pr_ham = (n_ham) / (n_spam + n_ham)
-            self.n_mails = n_spam + n_ham
+        # compute pr_spam and pr_ham
+        self.pr_spam = (n_spam) / (n_spam + n_ham)
+        self.pr_ham = (n_ham) / (n_spam + n_ham)
+        self.n_mails = n_spam + n_ham
+
+        from pudb import set_trace
+        set_trace()
+        self.compute_probabilies_of_table()
 
     def insert_token(self, token, spam):
         """Insert a token into the table."""
@@ -99,6 +124,8 @@ class BayesSpamfilter():
                 ret_val = (entry[1], entry[2])
         return ret_val
 
+    # computes the probability of a token according to the table entry
+    # obsolote method
     def compute_email_probability(self, content):
         """Compute the probability for an email to be spam."""
         # probability of the word vector
