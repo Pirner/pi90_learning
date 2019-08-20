@@ -1,2 +1,5 @@
+numpy
+matplotlib
 flake8==3.7.7
 mysql-connector-python==8.0.15
+tensorflow
