@@ -166,7 +166,7 @@ class MainView(Frame):
             print('selected model: ', tail)
             count = len(tail)
             self.model_path_label.config(text=tail[count - 1])
-        except IOError:
+        except IOError:<
             print('IOError')
         else:
             print(viewSettings['file_dialog_error_message'])

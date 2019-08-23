@@ -11,7 +11,7 @@ img_height = 3023
 def preprocess_image(file):
     pil_img = Image.open(file)
     pil_img = pil_img.resize((img_width, img_height), Image.BILINEAR)
-    np_img = np.array(pil_img, dtype=np.uint16).reshape((img_width, img_height))
+    np_img = np.array(pil_img, dtype=np.uint16).reshape((img_width * img_height))
     return np_img
 
 
