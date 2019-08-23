@@ -188,4 +188,4 @@ n_batches = math.ceil(n_data_samples / batch_size)
 
 # model.fit_generator(generator=data_gen_train, validation_data=data_gen_validate, use_multiprocessing=True, workers=1)
 
-model.fit_generator(generator=data_gen_train, validation_data=data_gen_validate, use_multiprocessing=False)
+model.fit_generator(generator=data_gen_train, validation_data=data_gen_validate, use_multiprocessing=False, epochs=3)

@@ -1,17 +1,23 @@
 import numpy as np
 import keras
-from tensorflow.python.keras.utils.data_utils import Sequence
+# from tensorflow.python.keras.utils.data_utils import Sequence
+from keras.utils import Sequence
 from PIL import Image
 from pudb import set_trace
-
-img_width = 3023
-img_height = 3023
+from image_classifier.Settings import  network_params
 
 
 def preprocess_image(file):
     pil_img = Image.open(file)
-    pil_img = pil_img.resize((img_width, img_height), Image.BILINEAR)
-    np_img = np.array(pil_img, dtype=np.uint16).reshape((img_width * img_height))
+    pil_img = pil_img.resize((network_params['img_width'], network_params['img_height']), Image.BILINEAR)
+    np_img = np.array(pil_img, dtype=np.uint16).reshape((network_params['img_width'] * network_params['img_height']))
+    return np_img
+
+
+def preprocess_image_cnn(file):
+    pil_img = Image.open(file)
+    pil_img = pil_img.resize((network_params['img_width'], network_params['img_height']), Image.BILINEAR)
+    np_img = np.array(pil_img, dtype=np.uint16).reshape((network_params['img_width'], network_params['img_height'], 1))
     return np_img
 
 
@@ -75,13 +81,13 @@ class DataGenerator(Sequence):
     def __data_generation(self, list_IDs_temp):
         'Generates data containing batch_size samples' # X : (n_samples, *dim, n_channels)
         # Initialization
-        X = np.empty((self.batch_size, img_width*img_height))
+        X = np.empty(shape=(self.batch_size, network_params['img_width'], network_params['img_height'], 1))
         y = np.empty(self.batch_size, dtype=int)
 
         # Generate data
         for i, ID in enumerate(list_IDs_temp):
             # Store sample
-            X[i, ] = preprocess_image(ID)
+            X[i, ] = preprocess_image_cnn(ID)
 
             # Store class
             index = self.get_label_of_image(ID)
