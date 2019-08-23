@@ -9,12 +9,6 @@ from DataIO.CustomDataGenerator import DataGenerator
 from image_classifier.Settings import network_params
 
 
-net_parameters = {
-    'img_width': 3023,
-    'img_height': 3023
-}
-
-
 class PackageDetectorCNN(object):
     model = None
     batch_size = 8
@@ -26,7 +20,7 @@ class PackageDetectorCNN(object):
     def initialize_model(self, model_name='', new=True):
         # create model architecture
         self.model = Sequential()
-        self.model.add(Conv2D(64, kernel_size=3, activation='relu', input_shape=(net_parameters['img_width'], net_parameters['img_height'], 1)))
+        self.model.add(Conv2D(64, kernel_size=3, activation='relu', input_shape=(network_params['img_width'], network_params['img_height'], 1)))
         self.model.add(Conv2D(32, kernel_size=3, activation='relu'))
         self.model.add(Flatten())
         self.model.add(Dense(7, activation='softmax'))
@@ -47,7 +41,7 @@ class PackageDetectorCNN(object):
             x_train,
             y_train,
             batch_size=self.batch_size,
-            dim=(net_parameters['img_width'], net_parameters['img_height']),
+            dim=(network_params['img_width'], network_params['img_height']),
             n_classes=7,
             shuffle=False
         )
@@ -56,7 +50,7 @@ class PackageDetectorCNN(object):
             x_validate,
             y_validate,
             batch_size=self.batch_size,
-            dim=(net_parameters['img_width'], net_parameters['img_height']),
+            dim=(network_params['img_width'], network_params['img_height']),
             n_classes=7,
             shuffle=False
         )
@@ -70,7 +64,7 @@ class PackageDetectorCNN(object):
 package_detector_cnn = PackageDetectorCNN()
 package_detector_cnn.initialize_model()
 
-xml_file = 'O://10_Entwicklung/image_database/TESTSET.xml'
+xml_file = 'O://10_Entwicklung/image_database/learning_set_cnn_prototype.xml'
 
 print('Started Training')
 package_detector_cnn.list_train_model(xml_file, xml_file)

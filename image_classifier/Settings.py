@@ -14,9 +14,16 @@ minReelRadius = 15
 #n_classes = 7
 #model_name = 'package_classifier'
 
+#network_params = {
+#    'img_width': 3023,
+#    'img_height': 3023,
+#    'n_classes': 7,
+#    'model_name': 'package_classifier'
+#}
+
 network_params = {
-    'img_width': 3023,
-    'img_height': 3023,
+    'img_width': 250,
+    'img_height': 250,
     'n_classes': 7,
     'model_name': 'package_classifier'
 }
