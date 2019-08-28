@@ -55,7 +55,7 @@ class PackageDetectorCNN(object):
             shuffle=False
         )
 
-        self.model.fit_generator(generator=data_gen_train, validation_data=data_gen_validate, use_multiprocessing=False, epochs=3)
+        self.model.fit_generator(generator=data_gen_train, validation_data=data_gen_validate, use_multiprocessing=False, epochs=5)
 
     def save_model(self, model_name):
         self.model.save(model_name)

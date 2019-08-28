@@ -14,9 +14,15 @@ def preprocess_image(file):
 
 
 def preprocess_image_cnn(file):
-    pil_img = Image.open(file)
-    pil_img = pil_img.resize((network_params['img_width'], network_params['img_height']), Image.BILINEAR)
-    np_img = np.array(pil_img, dtype=np.uint16).reshape((network_params['img_width'], network_params['img_height'], 1))
+    try:
+        pil_img = Image.open(file)
+        pil_img = pil_img.resize((network_params['img_width'], network_params['img_height']), Image.BILINEAR)
+        np_img = np.array(pil_img, dtype=np.uint16).reshape((network_params['img_width'], network_params['img_height'], 1))
+    except IOError as e:
+        print('failed pre processing file: ', file)
+        img = Image.fromarray(np_img)
+        img.save('failed_image.png')
+
     return np_img
 
 
