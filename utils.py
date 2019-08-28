@@ -50,6 +50,22 @@ def label_img(img):
         return 6
 
 
+def get_image_path_labels_packed(file):
+    res = []
+    data_manager = StateInterface.StateInterface()
+    images = data_manager.readXMLImageList(file)
+    for img in images:
+        # packing image, label (while image is only the path!)
+        try:
+            if img is not None:
+                elem = (img.path, label_img(img))
+                res.append(elem)
+        except IOError:
+            print('failed to read image!')
+            continue
+    return res
+
+
 def get_image_paths_labels(file):
     paths = []
     labels = []
