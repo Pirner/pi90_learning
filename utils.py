@@ -2,12 +2,13 @@ import os
 import struct
 import numpy as np
 
-import tqdm
+from PIL import Image
 import csv
 
 from DataIO import StateInterface
 from image_classifier.DTO.AlgorithmDefinitionOption import AlgorithmDefinitionOption
 from image_classifier.DTO.Algorithm import Algorithm
+from image_classifier.Settings import network_params, network_params_small
 
 
 def load_mnist(path, kind='train'):
@@ -263,3 +264,68 @@ def StringToAlgorithm(str):
         print("no algorithm set: " + str)
 
     return ret
+
+
+# use this function to make even data sets
+
+
+class DataAnalyzer(object):
+
+    def __init__(self):
+        pass
+
+    def preprocess_image(self, file):
+        pil_img = Image.open(file)
+        pil_img = pil_img.resize((network_params['img_width'], network_params['img_height']), Image.BILINEAR)
+        np_img = np.array(pil_img, dtype=np.uint16).reshape(
+            (network_params['img_width'] * network_params['img_height']))
+        return np_img
+
+    def preprocess_image2D(self, file):
+        pil_img = Image.open(file)
+        pil_img = pil_img.resize((network_params['img_width'], network_params['img_height']), Image.BILINEAR)
+        np_img = np.array(pil_img, dtype=np.uint16).reshape(
+            (network_params['img_width'], network_params['img_height']))
+        return np_img
+
+    def preprocess_image2D_small(self, file):
+        pil_img = Image.open(file)
+        pil_img = pil_img.resize((network_params_small['img_width'], network_params_small['img_height']), Image.BILINEAR)
+        np_img = np.array(pil_img, dtype=np.uint16).reshape(
+            (network_params_small['img_width'], network_params_small['img_height']))
+        return np_img
+
+    def normalize_data(self, arr):
+        mean = arr.mean()
+        std = arr.std()
+        x = lambda a: (a - mean) / std
+        return x(arr)
+
+    def preprocess_image_cnn(self, file):
+        try:
+            pil_img = Image.open(file)
+            pil_img = pil_img.resize((network_params['img_width'], network_params['img_height']), Image.BILINEAR)
+            np_img = np.array(pil_img, dtype=np.uint16).reshape(
+                (1, network_params['img_width'], network_params['img_height'], 1))
+            np_img = self.normalize_data(np_img)
+        except IOError as e:
+            print('failed pre processing file: ', file)
+            img = Image.fromarray(np_img)
+            img.save('failed_image.png')
+
+        return np_img
+
+    def preprocess_image_cnn_batch(self, file):
+        try:
+            pil_img = Image.open(file)
+            pil_img = pil_img.resize((network_params['img_width'], network_params['img_height']), Image.BILINEAR)
+            np_img = np.array(pil_img, dtype=np.uint16).reshape(
+                (network_params['img_width'], network_params['img_height'], 1))
+            np_img = self.normalize_data(np_img)
+        except IOError as e:
+            print('failed pre processing file: ', file)
+            img = Image.fromarray(np_img)
+            img.save('failed_image.png')
+
+        return np_img
+

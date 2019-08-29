@@ -4,7 +4,14 @@ import keras
 from keras.utils import Sequence
 from PIL import Image
 from image_classifier.Settings import  network_params
+import tqdm
 
+
+def normalize_data(arr):
+    mean = arr.mean()
+    std = arr.std()
+    x = lambda a: (a - mean) / std
+    return x(arr)
 
 def preprocess_image(file):
     pil_img = Image.open(file)
@@ -18,6 +25,7 @@ def preprocess_image_cnn(file):
         pil_img = Image.open(file)
         pil_img = pil_img.resize((network_params['img_width'], network_params['img_height']), Image.BILINEAR)
         np_img = np.array(pil_img, dtype=np.uint16).reshape((network_params['img_width'], network_params['img_height'], 1))
+        np_img = normalize_data(np_img)
     except IOError as e:
         print('failed pre processing file: ', file)
         img = Image.fromarray(np_img)
@@ -40,7 +48,7 @@ def preprocess_batch(x, y):
 class DataGenerator(Sequence):
     'Generates data for Keras'
     def __init__(self, list_IDs, labels, batch_size=32, dim=(32, 32, 32), n_channels=1,
-                 n_classes=10, shuffle=True):
+                 n_classes=10, shuffle=True, normalize=False, normalize_all=False):
         'Initialization'
         self.dim = dim
         self.batch_size = batch_size
@@ -50,6 +58,46 @@ class DataGenerator(Sequence):
         self.n_classes = n_classes
         self.shuffle = shuffle
         self.on_epoch_end()
+        self.normalize = normalize
+        self.mean = 0
+        self.std = 0
+
+        # normalize data if requested
+        if normalize_all:
+            self.normalize_data_all()
+
+        sample_list = [1, 2, 3]
+        sample_list = np.array(sample_list)
+        self.normalize_data(sample_list)
+
+    def normalize_data_all(self):
+        self.mean = 0
+        self.std = 0
+        # first compute the mean of every single image:
+        means = []
+        for image_path in tqdm.tqdm(self.list_IDs):
+            data = preprocess_image_cnn(image_path)
+            means.append(data.mean())
+
+        n_entries = len(means)
+        means = np.array(means)
+
+        aux_sum = 0
+        for i in tqdm.tqdm(range(n_entries)):
+            aux_sum += means[i] / n_entries
+
+        final_mean = means.mean()
+
+        counter = 0
+        aux_mean = 0
+
+        for i in tqdm.tqdm(range(n_entries)):
+            aux_mean += means[i]
+            counter += 1
+
+        aux_mean = aux_mean / counter
+
+        print('mean successful computed')
 
     def get_label_of_image(self, img_path):
         i = 0
@@ -104,3 +152,9 @@ class DataGenerator(Sequence):
 
         return X, keras.utils.to_categorical(y, num_classes=self.n_classes)
         #return X, y
+
+    def normalize_data(self, arr):
+        mean = arr.mean()
+        std = arr.std()
+        x = lambda a: (a - mean) / std
+        return x(arr)

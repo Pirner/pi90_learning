@@ -25,7 +25,7 @@ class NetworkChoice(Enum):
 # stores data from the mainview
 class MainViewData(object):
     image_path = ''
-    list_path = ''
+    train_list_path = ''
     model_path = ''
     network_type = NetworkChoice.DNN
 
@@ -72,14 +72,15 @@ class MainView(Frame):
         self.rowconfigure(1, pad=3)
         self.rowconfigure(2, pad=3)
         self.rowconfigure(3, pad=3)
+        self.rowconfigure(4, pad=3)
+        self.rowconfigure(5, pad=3)
+        self.rowconfigure(6, pad=3)
+        self.rowconfigure(7, pad=3)
         # self.rowconfigure(3, pad=3)
         # self.rowconfigure(4, pad=3)
 
         # entry = Entry(self)
         # entry.grid(row=0, columnspan=4, sticky=W+E)
-
-        self.list_path = Button(self, text="List", command=self.set_list_path)
-        self.list_path.grid(row=0, column=0)
 
         self.image_path = Button(self, text="Image", command=self.set_image_path)
         self.image_path.grid(row=0, column=1)
@@ -88,8 +89,6 @@ class MainView(Frame):
         self.image_path.grid(row=0, column=2)
 
         # now some description boxes:
-        self.list_path_label = Label(self, text='not - set', anchor='w')
-        self.list_path_label.grid(row=1, column=0)
 
         self.image_path_label = Label(self, text='not - set', anchor='w')
         self.image_path_label.grid(row=1, column=1)
@@ -98,46 +97,85 @@ class MainView(Frame):
         self.model_path_label.grid(row=1, column=2)
 
         # select network
-        self.tkvar = StringVar(self)
+        self.network_enum = StringVar(self)
         network_types = {'DNN', 'CNN'}
-        self.tkvar.set('DNN')  # set the default option
+        self.network_enum.set('DNN')  # set the default option
 
 
-        network_selector = OptionMenu(self, self.tkvar, *network_types)
+        network_selector = OptionMenu(self, self.network_enum, *network_types)
         network_selector.grid(row=2, columnspan=3)
-        self.tkvar.trace('w', self.change_dropdown)
+        self.network_enum.trace('w', self.change_dropdown)
 
+        # row 3
+        self.train_list_path = Button(self, text="train-list", command=self.set_train_list_path)
+        self.train_list_path.grid(row=3, column=0)
 
+        self.valid_list_path = Button(self, text="valid-list", command=self.set_valid_list_path)
+        self.valid_list_path.grid(row=3, column=1)
+
+        # row 4
+        self.train_list_path_label = Label(self, text='not - set', anchor='w')
+        self.train_list_path_label.grid(row=4, column=0)
+
+        self.valid_list_path_label = Label(self, text='not - set', anchor='w')
+        self.valid_list_path_label.grid(row=4, column=1)
+
+        # row 5
+        train_button = Button(self, text="create new model", command=self.model_creation_wrapper)
+        train_button.grid(row=5, column=0)
+
+        # self.valid_list_path = Button(self, text="train-list", command=self.set_train_list_path)
+        # self.valid_list_path.grid(row=0, column=0)
+
+        # row 7
         closeButton = Button(self, text="Close", command=self.quit)
-        closeButton.grid(row=3, column=2)
+        closeButton.grid(row=7, column=2)
+
         # starts prediction process with given parameters
         okButton = Button(self, text="OK")
-        okButton.grid(row=3, column=0)
+        okButton.grid(row=7, column=0)
+
+
 
         self.pack()
 
     def change_dropdown(self, *args):
-        print('network - type: ', self.tkvar.get())
-        if self.tkvar.get() == 'DNN':
+        print('network - type: ', self.network_enum.get())
+        if self.network_enum.get() == 'DNN':
             print('DNN network - set locked.')
             self.data.network_type = NetworkChoice.DNN
-        elif self.tkvar.get() == 'CNN':
+        elif self.network_enum.get() == 'CNN':
             print('CNN network - set locked')
             self.data.network_type == NetworkChoice.CNN
         else:
             print('Invalid Network Architecture or not implemented yet')
 
 
-    def set_list_path(self):
+    def set_train_list_path(self):
         # filename = filedialog.askopenfilename(filetypes=(("XML files", "*.xml")))
         try:
             filename = filedialog.askopenfilename()
-            self.data.list_path = filename
+            self.data.train_list_path = filename
             # show only file the label
             tail = os.path.split(filename)
             print('selected list: ', tail)
             count = len(tail)
-            self.list_path_label.config(text=tail[count - 1])
+            self.train_list_path_label.config(text=tail[count - 1])
+        except IOError:
+            print('IOError')
+        else:
+            print(viewSettings['file_dialog_error_message'])
+
+    def set_valid_list_path(self):
+        # filename = filedialog.askopenfilename(filetypes=(("XML files", "*.xml")))
+        try:
+            filename = filedialog.askopenfilename()
+            self.data.valid_list_path = filename
+            # show only file the label
+            tail = os.path.split(filename)
+            print('selected list: ', tail)
+            count = len(tail)
+            self.valid_list_path_label.config(text=tail[count - 1])
         except IOError:
             print('IOError')
         else:
@@ -166,11 +204,20 @@ class MainView(Frame):
             print('selected model: ', tail)
             count = len(tail)
             self.model_path_label.config(text=tail[count - 1])
-        except IOError:<
+        except IOError:
             print('IOError')
         else:
             print(viewSettings['file_dialog_error_message'])
 
+    def model_creation_wrapper(self):
+        if self.network_enum.get() == 'DNN':
+            print('DNN architecture will be created...')
+
+        elif self.network_enum.get() == 'CNN':
+            print('CNN architecture will be created...')
+
+        else:
+            print('no valid option: ', self.network_enum.get())
 
 def main():
     root = Tk()
