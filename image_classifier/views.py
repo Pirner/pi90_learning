@@ -7,6 +7,12 @@ from tkinter import Tk, RIGHT, BOTH, RAISED, LEFT, Checkbutton, IntVar, Text, TO
 from tkinter import *
 from tkinter.ttk import Frame, Button, Style, Label, Entry
 
+
+from image_classifier.PackageDetector import PackageDetectorCNN
+from image_classifier.Settings import label_types
+from DataIO.CustomDataGenerator import preprocess_image_cnn_predict
+
+
 # move to views
 viewSettings = {
     'window_height': 500,
@@ -26,8 +32,13 @@ class NetworkChoice(Enum):
 class MainViewData(object):
     image_path = ''
     train_list_path = ''
+    valid_list_path = ''
+
+    prediction_image = None
+
     model_path = ''
     network_type = NetworkChoice.DNN
+    model_name = 'reel_classifier_ovr'
 
 
 
@@ -36,7 +47,7 @@ class MainView(Frame):
         super().__init__()
 
         self.data = MainViewData()
-
+        self.model = None
         self.initUI()
 
     def initUI(self):
@@ -76,6 +87,7 @@ class MainView(Frame):
         self.rowconfigure(5, pad=3)
         self.rowconfigure(6, pad=3)
         self.rowconfigure(7, pad=3)
+        self.rowconfigure(10, pad=3)
         # self.rowconfigure(3, pad=3)
         # self.rowconfigure(4, pad=3)
 
@@ -99,7 +111,7 @@ class MainView(Frame):
         # select network
         self.network_enum = StringVar(self)
         network_types = {'DNN', 'CNN'}
-        self.network_enum.set('DNN')  # set the default option
+        self.network_enum.set('CNN')  # set the default option
 
 
         network_selector = OptionMenu(self, self.network_enum, *network_types)
@@ -121,19 +133,37 @@ class MainView(Frame):
         self.valid_list_path_label.grid(row=4, column=1)
 
         # row 5
-        train_button = Button(self, text="create new model", command=self.model_creation_wrapper)
-        train_button.grid(row=5, column=0)
+        create_model_button = Button(self, text="create new model", command=self.model_creation_wrapper)
+        create_model_button.grid(row=5, column=0)
+
+        train_button = Button(self, text="train model", command=self.train_model_wrapper)
+        train_button.grid(row=5, column=1)
+
+        save_button = Button(self, text="save model", command=self.save_model_wrapper)
+        save_button.grid(row=5, column=2)
+
+        # row 6
+        load_model_button = Button(self, text="load existing model", command=self.model_creation_wrapper)
+        load_model_button.grid(row=6, column=0)
+
+
+        # row 7
+        predict_image_button = Button(self, text="predict_image", command=self.predict_with_existing_model_wrapper)
+        predict_image_button.grid(row=7, column=0)
+
+        self.prediction_result_label = Label(self, text='not - set', anchor='w')
+        self.prediction_result_label.grid(row=7, column=1)
 
         # self.valid_list_path = Button(self, text="train-list", command=self.set_train_list_path)
         # self.valid_list_path.grid(row=0, column=0)
 
-        # row 7
-        closeButton = Button(self, text="Close", command=self.quit)
-        closeButton.grid(row=7, column=2)
+        # row 10
+        close_button = Button(self, text="Close", command=self.quit)
+        close_button.grid(row=10, column=2)
 
         # starts prediction process with given parameters
-        okButton = Button(self, text="OK")
-        okButton.grid(row=7, column=0)
+        ok_button = Button(self, text="OK")
+        ok_button.grid(row=10, column=0)
 
 
 
@@ -209,15 +239,60 @@ class MainView(Frame):
         else:
             print(viewSettings['file_dialog_error_message'])
 
+
+
     def model_creation_wrapper(self):
         if self.network_enum.get() == 'DNN':
             print('DNN architecture will be created...')
+            print('Not implemented yet.')
 
         elif self.network_enum.get() == 'CNN':
             print('CNN architecture will be created...')
+            self.model = PackageDetectorCNN()
+            self.model.initialize_model()
 
         else:
             print('no valid option: ', self.network_enum.get())
+
+    def train_model_wrapper(self):
+        # function to train the model which has been created earlier
+        if self.model is not None:
+            # start training of the model
+            # TODO implement checking for parameters for start training
+            # TODO removed hardcoded debug lists
+            self.data.train_list_path = 'O://10_Entwicklung/image_database/TESTSET.xml'
+            self.data.valid_list_path = 'O://10_Entwicklung/image_database/VALIDATION_DATA.xml'
+
+            self.model.list_train_model_one_hot(
+                self.data.train_list_path,
+                self.data.valid_list_path,
+                label_types['ovr_reel_list_labels']
+            )
+            print('making autosave of model')
+            self.save_model_wrapper()
+        else:
+            print('Model is none (keras model)')
+
+
+    def save_model_wrapper(self):
+        # saves the model
+        if self.model is not None:
+            # TODO implement mechanic to ensure saving
+            self.model.save_model(self.data.model_name)
+
+    def load_model_wrapper(self):
+        # saves the model
+        if self.model is not None:
+            # TODO implement mechanic to ensure loading
+            self.model.load_model_state(model_name=self.data.model_name)
+
+    def predict_with_existing_model_wrapper(self):
+        # predicts with a single image
+        if self.model is not None:
+            x = preprocess_image_cnn_predict(self.data.image_path)
+            result = self.model.predict_single(x)
+            self.prediction_result_label.config(text=result)
+
 
 def main():
     root = Tk()

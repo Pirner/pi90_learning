@@ -9,7 +9,7 @@ from keras.models import load_model
 
 
 # own packages
-from utils import get_image_paths_labels, get_image_path_labels_packed, label_img
+from utils import get_image_paths_labels, get_image_path_labels_packed, get_image_path_labels_packed_ovr, label_img
 from utils import DataAnalyzer
 from DataIO.CustomDataGenerator import DataGenerator
 from image_classifier.Settings import network_params
@@ -31,19 +31,24 @@ class PackageDetectorCNN(object):
 
     def initialize_model(self, model_name='', new=True):
         # create model architecture
+        print('creating new CNN model.')
         self.model = Sequential()
         self.model.add(Conv2D(64, kernel_size=3, activation='relu', input_shape=(network_params['img_width'], network_params['img_height'], 1)))
         self.model.add(Conv2D(32, kernel_size=3, activation='relu'))
         self.model.add(Flatten())
-        self.model.add(Dense(network_params['n_classes'], activation='softmax'))
+        self.model.add(Dense(network_params['n_classes_one_hot'], activation='softmax'))
 
         self.model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+        print('finished creating CNN model.')
 
         if new:
             pass
 
         else:
+            print('model has been loaded with name: ', model_name)
             self.model = load_model(model_name)
+
+        print('finished creating model.')
 
     def load_model_state(self, model_name):
         self.model = load_model(model_name)
@@ -53,7 +58,7 @@ class PackageDetectorCNN(object):
         validation_data = get_image_path_labels_packed(validation_list)
 
         sample_path, sample_lable = train_data[0]
-        print('sample_path: ', sample_path, 'sample_lable: ',sample_lable)
+        print('sample_path: ', sample_path, 'sample_lable: ', sample_lable)
 
         # data_analyzer = DataAnalyzer()
         # sample_img_preprocessed = data_analyzer.preprocess_image2D_small(sample_path)
@@ -136,6 +141,59 @@ class PackageDetectorCNN(object):
 
         self.model.fit_generator(generator=data_gen_train, validation_data=data_gen_validate, use_multiprocessing=False, epochs=5)
 
+    def list_train_model_one_hot(self, train_list, validation_list, target, n_elements=50):
+        train_data = get_image_path_labels_packed_ovr(train_list, target)
+        validation_data = get_image_path_labels_packed_ovr(validation_list, target)
+
+        sample_path, sample_lable = train_data[0]
+        print('sample_path: ', sample_path, 'sample_lable: ', sample_lable)
+
+        # shuffle data
+        random.shuffle(train_data)
+        random.shuffle(validation_data)
+
+        x_train = []
+        y_train = []
+
+        x_validate = []
+        y_validate = []
+
+        for x, y in train_data:
+            x_train.append(x)
+            y_train.append(y)
+
+        for x, y in validation_data:
+            x_validate.append(x)
+            y_validate.append(y)
+
+        train_data_size = len(train_data)
+
+        valDataSize = len(validation_data)
+
+        labels_processed = []
+        # now pick of of each label 50 sample data
+
+        data_gen_train = DataGenerator(
+                x_train,
+                y_train,
+                batch_size=self.batch_size,
+                dim=(network_params['img_width'], network_params['img_height']),
+                n_classes=network_params['n_classes_one_hot'],
+                shuffle=False,
+                normalize=True
+        )
+
+        data_gen_validate = DataGenerator(
+            x_validate,
+            y_validate,
+            batch_size=self.batch_size,
+            dim=(network_params['img_width'], network_params['img_height']),
+            n_classes=network_params['n_classes_one_hot'],
+            shuffle=False
+        )
+
+        self.model.fit_generator(generator=data_gen_train, validation_data=data_gen_validate, use_multiprocessing=False, epochs=50)
+
     def list_train_model_all_images(self, train_list, validation_list):
         x_train, y_train = get_image_paths_labels(train_list)
         x_validate, y_validate = get_image_paths_labels(validation_list)
@@ -169,7 +227,8 @@ class PackageDetectorCNN(object):
     def save_model(self, model_name):
         self.model.save(model_name)
 
-def initialize_and_train_net_network(network, list_path_train, list_path_validation, labels)
+
+def initialize_and_train_net_network(network, list_path_train, list_path_validation, labels):
     print('Initializing CNN-Model...')
     network.initialize_model()
     print('Finished init')
@@ -182,10 +241,10 @@ def initialize_and_train_net_network(network, list_path_train, list_path_validat
     print('finished saving model')
 
 
-package_detector_cnn = PackageDetectorCNN()
-package_detector_cnn.initialize_model()
-classifier_labels = [1, 2, 3]
-xml_file = 'O://10_Entwicklung/image_database/learning_set_cnn_prototype.xml'
+#package_detector_cnn = PackageDetectorCNN()
+#package_detector_cnn.initialize_model()
+#classifier_labels = [1, 2, 3]
+#xml_file = 'O://10_Entwicklung/image_database/learning_set_cnn_prototype.xml'
 
 
 #print('Started Training')
