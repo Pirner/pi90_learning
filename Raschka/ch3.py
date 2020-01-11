@@ -39,3 +39,7 @@ plt.legend(loc='upper left')
 result = lr.predict_proba(x_test_std[:3, :]).argmax(axis=1)
 
 print(result)
+
+weights, params = [], []
+for c in np.arange(-5, 5):
+    lr = LogisticRegression(C=10.**c, random_state=1)
